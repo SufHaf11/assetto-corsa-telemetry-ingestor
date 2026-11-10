@@ -36,9 +36,11 @@ try:
                 #RPM bytes
                 rpm = struct.unpack('<68xf', data[:72])[0]
 
+                #Selected gear bytes
+                selected_gear = struct.unpack('<76xi', data[:80])[0]
 
                 #Outputs the telemtry data in a readable format without constant outputs. Values are flushed to the console to ensure they are printed immediately and not buffered.
-                print(f"\rRPM: {rpm:6.1f} | Speed: {speed:6.2f} km/h", end="", flush=True)
+                print(f"\rRPM: {rpm:6.1f} | Speed: {speed:6.2f} km/h | Selected Gear: {selected_gear}", end="", flush=True)
 
 
 
