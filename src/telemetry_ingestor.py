@@ -19,6 +19,15 @@ udp_socket.sendto(sub_packet, (HOST, PORT))
 print("- Listening for data... -")
 
 
+#Formats the gear value to display neutral and reverse as N or R instead of integer values like 1 or 0. Makes the ouput more readable
+def format_gear(gear):
+    if gear == 1:
+        return "N"
+    elif gear == 0:
+        return "R"
+    else:
+        return str(gear)
+
 #Loops indefinitely to receive telemetry data from Assetto Corsa and print it to the console until a interrupt
 try:
     while True:
@@ -37,10 +46,10 @@ try:
                 rpm = struct.unpack('<68xf', data[:72])[0]
 
                 #Selected gear bytes
-                selected_gear = struct.unpack('<76xi', data[:80])[0]
+                gear = struct.unpack('<76xi', data[:80])[0]
 
                 #Outputs the telemtry data in a readable format without constant outputs. Values are flushed to the console to ensure they are printed immediately and not buffered.
-                print(f"\rRPM: {rpm:6.1f} | Speed: {speed:6.2f} km/h | Selected Gear: {selected_gear}", end="", flush=True)
+                print(f"\rRPM: {rpm:6.0f} | Speed: {speed:6.2f} km/h | Selected Gear: {format_gear(gear)}", end="", flush=True)
 
 
 
