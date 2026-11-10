@@ -16,7 +16,7 @@ print("- Handshake sent to Assetto Corsa. -")
 #Listen for the handshake response from Assetto Corsa
 sub_packet = struct.pack('<iii', 0, 1, 1)
 udp_socket.sendto(sub_packet, (HOST, PORT))
-print("- Subscribed to live stream. Listening for data... -")
+print("- Listening for data... -")
 
 
 #Loops indefinitely to receive telemetry data from Assetto Corsa and print it to the console until a interrupt
@@ -28,12 +28,17 @@ try:
 #Assetto corsa only uses 328 bytes so a check is done to ensure the data is the correct size before unpacking the bytes
 #Assetto corsa sends data in 4 bytes values so unpacking for each value is done with .unpack and in 4 byte increments. The game also required a 4 byte buffer to allow it to be unpacked correctly.     
         if len(data) == 328:
-            #Currently only speed is being unpacked and printed to the console for testing   
-            speed = struct.unpack('<8xf', data[:12])[0]
-            #<8xf unpacks 8 bytes (2*4 bytes) and skips the first 8 bytes of the data stream to get to the speed value which is located at byte 8-12. The f indicates that the value is a float.
-            print(f"Speed: {speed:.2f} km/h")
-            
-        
+
+                #Bytes from the data stream are unpacked and assigned values to the respective variables.
+                speed = struct.unpack('<8xf', data[:12])[0]
+                #<8xf unpacks 8 bytes (2*4 bytes) and skips the first 8 bytes of the data stream to get to the speed value which is located at byte 8-12. The f indicates that the value is a float.
+                
+                #RPM bytes
+                rpm = struct.unpack('<68xf', data[:72])[0]
+
+
+                #Outputs the telemtry data in a readable format without constant outputs. Values are flushed to the console to ensure they are printed immediately and not buffered.
+                print(f"\rRPM: {rpm:6.1f} | Speed: {speed:6.2f} km/h", end="", flush=True)
 
 
 
