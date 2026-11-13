@@ -25,6 +25,10 @@ def format_gear(gear):
         return "N"
     elif gear == 0:
         return "R"
+    #Temp fix for gears showing a gear selected higher than it is. Will be fixed properly when fetching car information data
+    elif gear >= 2:
+        return str(gear - 1)
+    
     else:
         return str(gear)
 
@@ -48,8 +52,11 @@ try:
                 #Selected gear bytes
                 gear = struct.unpack('<76xi', data[:80])[0]
 
+                #Car position bytes. As its a 3D vector, 3 values are unpacked for the x,y and z coordinates
+                posx, posy, posz = struct.unpack('<316x3f', data[:328])   
+
                 #Outputs the telemtry data in a readable format without constant outputs. Values are flushed to the console to ensure they are printed immediately and not buffered.
-                print(f"\rRPM: {rpm:6.0f} | Speed: {speed:6.2f} km/h | Selected Gear: {format_gear(gear)}", end="", flush=True)
+                print(f"\rRPM: {rpm:6.0f} | Speed: {speed:6.2f} km/h | Selected Gear: {format_gear(gear)} | Position: ({posx:.0f}, {posy:.0f}, {posz:.0f})", end="", flush=True)
 
 
 
