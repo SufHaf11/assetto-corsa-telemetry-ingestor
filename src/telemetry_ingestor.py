@@ -1,9 +1,16 @@
 import socket
 import struct 
+import asyncio
+import websockets
 
 #Change target host IP if you are using a different machine to send the telemetry data
 HOST = "127.0.0.1"
 PORT = 9996
+
+#Change the websocket host and port if you want to use a different machine to receive the telemetry data
+WS_HOST = "localhost"
+WS_PORT = 8765
+connected_clients = set()
 
 #Create the UDP socket
 udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -32,10 +39,18 @@ def format_gear(gear):
     else:
         return str(gear)
 
+
+
+
+
+
+loop = asyncio.get_running_loop()
 #Loops indefinitely to receive telemetry data from Assetto Corsa and print it to the console until a interrupt
 try:
+    udp_socket.setblocking(False)
+
     while True:
-# Capture raw bytes from the data stream
+# Waits to capture raw bytes from the data stream 
         data, addr = udp_socket.recvfrom(1024)
 
 #Assetto corsa only uses 328 bytes so a check is done to ensure the data is the correct size before unpacking the bytes
