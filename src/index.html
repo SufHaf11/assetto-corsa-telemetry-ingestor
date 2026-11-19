@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Live Telemetry</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <h1>Live Telemetry</h1>
+    <div id="status" class="status">Disconnected</div>
+
+    <div class="telemetry">
+      <div class="row"><span class="name">Speed</span><span id="speed" class="value">-- km/h</span></div>
+      <div class="row"><span class="name">RPM</span><span id="rpm" class="value">--</span></div>
+      <div class="row"><span class="name">Gear</span><span id="gear" class="value">--</span></div>
+      <div class="row"><span class="name">Throttle</span><span id="throttle" class="value">--%</span></div>
+      <div class="row"><span class="name">Brake</span><span id="brake" class="value">--%</span></div>
+      <div class="row"><span class="name">Clutch</span><span id="clutch" class="value">--%</span></div>
+      <div class="row"><span class="name">Position X</span><span id="posx" class="value">--</span></div>
+      <div class="row"><span class="name">Position Y</span><span id="posy" class="value">--</span></div>
+      <div class="row"><span class="name">Position Z</span><span id="posz" class="value">--</span></div>
+    </div>
+  </main>
+
+  <script>
+    <!-- Initialize the status element and telemetry fields -->
+    const status = document.getElementById("status");
+    const fields = {
+      speed: document.getElementById("speed"),
+      rpm: document.getElementById("rpm"),
+      gear: document.getElementById("gear"),
+      throttle: document.getElementById("throttle"),
+      brake: document.getElementById("brake"),
+      clutch: document.getElementById("clutch"),
+      posx: document.getElementById("posx"),
+      posy: document.getElementById("posy"),
+      posz: document.getElementById("posz")
+    };
+
+
+<!-- Connects to the websocket from the script. Checks for connection status. Parses the JSON data from the script and updates the UI -->
+    function connect() {
+      const socket = new WebSocket("ws://localhost:8765");
+
+      socket.addEventListener("open", () => {
+        status.textContent = "Connected";
+        status.classList.add("connected");
+      });
+
+      socket.addEventListener("message", (event) => {
+        const data = JSON.parse(event.data);
+
+<!-- Updates the UI with the telemetry data received from the websocket -->
+        fields.speed.textContent = `${data.speed.toFixed(1)} km/h`;
+        fields.rpm.textContent = data.rpm.toFixed(0);
+        fields.gear.textContent = data.gear;
+        fields.throttle.textContent = `${(data.throttle * 100).toFixed(0)}%`;
+        fields.brake.textContent = `${(data.brake * 100).toFixed(0)}%`;
+        fields.clutch.textContent = `${(data.clutch * 100).toFixed(0)}%`;
+        fields.posx.textContent = data.posx.toFixed(1);
+        fields.posy.textContent = data.posy.toFixed(1);
+        fields.posz.textContent = data.posz.toFixed(1);
+      });
+
+      <!-- Handles the websocket close event -->
+      socket.addEventListener("close", () => {
+        status.textContent = "Disconnected - reconnecting";
+        status.classList.remove("connected");
+        setTimeout(connect, 2000);
+      });
+
+      socket.addEventListener("error", () => {
+        socket.close();
+      });
+    }
+
+    connect();
+  </script>
+</body>
+</html>
