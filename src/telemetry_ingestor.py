@@ -21,17 +21,20 @@ handshake_packet = struct.pack('<iii', 0, 1, 0)
 udp_socket.sendto(handshake_packet, (HOST, PORT))
 print("- Handshake sent to Assetto Corsa. -")
 
+
 #Gets the handshake response from the game and unpacks the car and track name from raw bytes.
 handshake_data, _ = udp_socket.recvfrom(1024)
 if len(handshake_data) == 408:
-    #The bytes are decoded from UTF-16 little endian and stripped of null characters to get the actual names
-    raw_car_bytes, raw_track_bytes = struct.unpack('<100s108x100s100x', handshake_data)
+    raw_car_bytes, raw_driver_bytes, raw_track_bytes, raw_config_bytes = struct.unpack(
+        '<100s100s8x100s100s', handshake_data
+    )
     car_name = raw_car_bytes.decode('utf-16-le', errors='ignore').strip('\x00')
+    driver_name = raw_driver_bytes.decode('utf-16-le', errors='ignore').strip('\x00')
     track_name = raw_track_bytes.decode('utf-16-le', errors='ignore').strip('\x00')
-    print(f"- Car: {car_name} | Track: {track_name} -")
+    track_config = raw_config_bytes.decode('utf-16-le', errors='ignore').strip('\x00')
+    print(f"- Driver: {driver_name} | Car: {car_name} | Track: {track_name} ({track_config}) -")
 else:
     print(f"- Unexpected handshake packet size: {len(handshake_data)} bytes -")
-
 
 
 #Listen for the handshake response from Assetto Corsa
@@ -66,6 +69,7 @@ async def ws_handler(websocket):
         print(f"\nDashboard disconnected. Active clients: {len(connected_clients)}")
 
 
+
 #Added a function to allow for the data to be sent to a websocket server. The data is converted to JSON and sent to be parsed and translated back on the receiving end.
 async def main_loop():
     loop = asyncio.get_running_loop()
@@ -77,9 +81,8 @@ async def main_loop():
         while True:
             #Waits to capture raw bytes from the data stream to the socket
             data = await loop.sock_recv(udp_socket, 1024)
+
             
-            
-   
    
     #Assetto corsa only uses 328 bytes so a check is done to ensure the data is the correct size before unpacking the bytes
     #Assetto corsa sends data in 4 bytes values so unpacking for each value is done with .unpack and in 4 byte increments. The game also required a 4 byte buffer to allow it to be unpacked correctly.     
@@ -95,6 +98,9 @@ async def main_loop():
                     #Selected gear bytes
                     gear = struct.unpack('<76xi', data[:80])[0]
 
+                    #Throttle, brake and clutch bytes
+                    throttle, brake, clutch = struct.unpack('<56x3f', data[:68])
+
                     #Car position bytes. As its a 3D vector, 3 values are unpacked for the x,y and z coordinates
                     posx, posy, posz = struct.unpack('<316x3f', data[:328])   
 
@@ -103,6 +109,9 @@ async def main_loop():
                         "speed": speed,
                         "rpm": rpm,
                         "gear": format_gear(gear),
+                        "throttle": throttle,
+                        "brake": brake,
+                        "clutch": clutch,
                         "posx": posx,
                         "posy": posy,
                         "posz": posz
@@ -123,12 +132,11 @@ async def main_loop():
         print("\nTelemetry ingestor stopped.")
         udp_socket.close()
 
+
 async def main():
     # Start the WebSocket server and keep it running alongside the telemetry loop
     async with websockets.serve(ws_handler, WS_HOST, WS_PORT):
         await main_loop()
-
-
 
 
 
