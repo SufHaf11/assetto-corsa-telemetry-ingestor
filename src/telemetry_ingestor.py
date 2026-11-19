@@ -45,6 +45,7 @@ async def ws_handler(websocket):
     connected_clients.add(websocket)
     print(f"\nDashboard connected! Active clients: {len(connected_clients)}")
     
+    #Keeps the websocket connection open until the client disconnects.
     try:
         await websocket.wait_closed()
     finally:
@@ -61,7 +62,7 @@ async def main_loop():
         udp_socket.setblocking(False)
 
         while True:
-            #Waits to capture raw bytes from the data stream 
+            #Waits to capture raw bytes from the data stream to the socket
             data = await loop.sock_recv(udp_socket, 1024)
             
             
@@ -114,5 +115,9 @@ async def main():
     async with websockets.serve(ws_handler, WS_HOST, WS_PORT):
         await main_loop()
 
+
+
+
+
 if __name__ == "__main__":
-    asyncio.run(main_loop())
+    asyncio.run(main())
