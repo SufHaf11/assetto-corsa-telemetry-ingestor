@@ -21,6 +21,19 @@ handshake_packet = struct.pack('<iii', 0, 1, 0)
 udp_socket.sendto(handshake_packet, (HOST, PORT))
 print("- Handshake sent to Assetto Corsa. -")
 
+#Gets the handshake response from the game and unpacks the car and track name from raw bytes.
+handshake_data, _ = udp_socket.recvfrom(1024)
+if len(handshake_data) == 408:
+    #The bytes are decoded from UTF-16 little endian and stripped of null characters to get the actual names
+    raw_car_bytes, raw_track_bytes = struct.unpack('<100s108x100s100x', handshake_data)
+    car_name = raw_car_bytes.decode('utf-16-le', errors='ignore').strip('\x00')
+    track_name = raw_track_bytes.decode('utf-16-le', errors='ignore').strip('\x00')
+    print(f"- Car: {car_name} | Track: {track_name} -")
+else:
+    print(f"- Unexpected handshake packet size: {len(handshake_data)} bytes -")
+
+
+
 #Listen for the handshake response from Assetto Corsa
 sub_packet = struct.pack('<iii', 0, 1, 1)
 udp_socket.sendto(sub_packet, (HOST, PORT))
