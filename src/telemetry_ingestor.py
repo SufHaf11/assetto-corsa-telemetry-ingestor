@@ -22,16 +22,16 @@ udp_socket.sendto(handshake_packet, (HOST, PORT))
 print("- Handshake sent to Assetto Corsa. -")
 
 
-#Gets the handshake response from the game and unpacks the car and track name from raw bytes.
+#Gets the handshake response from the game and unpacks the car, driver, track, and config names from raw bytes.
 handshake_data, _ = udp_socket.recvfrom(1024)
 if len(handshake_data) == 408:
     raw_car_bytes, raw_driver_bytes, raw_track_bytes, raw_config_bytes = struct.unpack(
         '<100s100s8x100s100s', handshake_data
     )
-    car_name = raw_car_bytes.decode('utf-16-le', errors='ignore').strip('\x00')
-    driver_name = raw_driver_bytes.decode('utf-16-le', errors='ignore').strip('\x00')
-    track_name = raw_track_bytes.decode('utf-16-le', errors='ignore').strip('\x00')
-    track_config = raw_config_bytes.decode('utf-16-le', errors='ignore').strip('\x00')
+    car_name = raw_car_bytes.decode('utf-16-le', errors='ignore').split('%', 1)[0].split('\x00', 1)[0]
+    driver_name = raw_driver_bytes.decode('utf-16-le', errors='ignore').split('%', 1)[0].split('\x00', 1)[0]
+    track_name = raw_track_bytes.decode('utf-16-le', errors='ignore').split('%', 1)[0].split('\x00', 1)[0]
+    track_config = raw_config_bytes.decode('utf-16-le', errors='ignore').split('%', 1)[0].split('\x00', 1)[0]
     print(f"- Driver: {driver_name} | Car: {car_name} | Track: {track_name} ({track_config}) -")
 else:
     print(f"- Unexpected handshake packet size: {len(handshake_data)} bytes -")
@@ -117,6 +117,7 @@ async def main_loop():
                         "posz": posz
                     }
 
+                    #If there are connected clients, the data is converted to JSON and sent to the websocket server
                     if connected_clients:
                         message = json.dumps(telemetry_data)
                         for client in connected_clients:
@@ -133,8 +134,8 @@ async def main_loop():
         udp_socket.close()
 
 
+# Start the WebSocket server and keep it running alongside the telemetry loop
 async def main():
-    # Start the WebSocket server and keep it running alongside the telemetry loop
     async with websockets.serve(ws_handler, WS_HOST, WS_PORT):
         await main_loop()
 
