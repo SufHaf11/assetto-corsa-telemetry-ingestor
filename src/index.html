@@ -21,11 +21,13 @@
       <div class="row"><span class="name">Position X: </span><span id="posx" class="value">--</span></div>
       <div class="row"><span class="name">Position Y: </span><span id="posy" class="value">--</span></div>
       <div class="row"><span class="name">Position Z: </span><span id="posz" class="value">--</span></div>
+      <div class="row"><span class="name">Last Lap: </span><span id="lastLap" class="value">--</span></div>
+      <div class="row"><span class="name">Best Lap: </span><span id="bestLap" class="value">--</span></div>
     </div>
   </main>
 
   <script>
-    <!-- Initialize the status element and telemetry fields -->
+    // Initialize the status element and telemetry fields
     const status = document.getElementById("status");
     const fields = {
       speed: document.getElementById("speed"),
@@ -40,7 +42,7 @@
     };
 
 
-<!-- Connects to the websocket from the script. Checks for connection status. Parses the JSON data from the script and updates the UI -->
+// Connects to the websocket from the script. Checks for connection status. Parses the JSON data from the script and updates the UI 
     function connect() {
       const socket = new WebSocket("ws://localhost:8765");
 
@@ -52,7 +54,7 @@
       socket.addEventListener("message", (event) => {
         const data = JSON.parse(event.data);
 
-<!-- Updates the UI with the telemetry data received from the websocket -->
+// Updates the UI with the telemetry data received from the websocket
         fields.speed.textContent = `${data.speed.toFixed(1)} km/h`;
         fields.rpm.textContent = data.rpm.toFixed(0);
         fields.gear.textContent = data.gear;
@@ -64,7 +66,7 @@
         fields.posz.textContent = data.posz.toFixed(1);
       });
 
-      <!-- Handles the websocket close event -->
+      // Handles the websocket close event
       socket.addEventListener("close", () => {
         status.textContent = "Disconnected - reconnecting";
         status.classList.remove("connected");

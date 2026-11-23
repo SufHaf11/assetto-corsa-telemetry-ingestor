@@ -49,7 +49,6 @@ def format_gear(gear):
         return "N"
     elif gear == 0:
         return "R"
-    #Temp fix for gears showing a gear selected higher than it is. Will be fixed properly when fetching car information data
     elif gear >= 2:
         return str(gear - 1)
     
@@ -102,7 +101,10 @@ async def main_loop():
                     throttle, brake, clutch = struct.unpack('<56x3f', data[:68])
 
                     #Car position bytes. As its a 3D vector, 3 values are unpacked for the x,y and z coordinates
-                    posx, posy, posz = struct.unpack('<316x3f', data[:328])   
+                    posx, posy, posz = struct.unpack('<316x3f', data[:328]) 
+
+                    #Lap time, last lap and best lap bytes
+                    lastLap, bestLap = struct.unpack('<44x2i', data[:52])  
 
                     #Dictionary for the data to be converted to JSON and sent to the websocket.
                     telemetry_data = {
@@ -114,7 +116,9 @@ async def main_loop():
                         "clutch": clutch,
                         "posx": posx,
                         "posy": posy,
-                        "posz": posz
+                        "posz": posz,
+                        "lastLap": lastLap,
+                        "bestLap": bestLap
                     }
 
                     #If there are connected clients, the data is converted to JSON and sent to the websocket server
@@ -124,7 +128,7 @@ async def main_loop():
                             await client.send(message)
                     
                     #Outputs the telemtry data in a readable format without constant outputs. Values are flushed to the console to ensure they are printed immediately and not buffered.
-                    print(f"\rRPM: {rpm:6.0f} | Speed: {speed:6.2f} km/h | Selected Gear: {format_gear(gear)} | Position: ({posx:.0f}, {posy:.0f}, {posz:.0f})", end="", flush=True)
+                    print(f"\rRPM: {rpm:6.0f} | Speed: {speed:6.2f} km/h | Selected Gear: {format_gear(gear)} | Position: ({posx:.0f}, {posy:.0f}, {posz:.0f}) | Last Lap: {lastLap:.0f} | Best Lap: {bestLap:.0f}", end="", flush=True)
                     
                     
 
