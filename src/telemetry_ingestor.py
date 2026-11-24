@@ -3,6 +3,7 @@ import struct
 import asyncio
 import websockets
 import json
+from parser import parse_handshake, parse_telemetry #Importing the parse handshake and telemetry from the parser script
 
 #Change target host IP if you are using a different machine to send the telemetry data
 HOST = "127.0.0.1"
@@ -16,44 +17,12 @@ connected_clients = set()
 #Create the UDP socket
 udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-#Create the handshake packet and send it to Assetto Corsa
-handshake_packet = struct.pack('<iii', 0, 1, 0)
-udp_socket.sendto(handshake_packet, (HOST, PORT))
-print("- Handshake sent to Assetto Corsa. -")
-
-
-#Gets the handshake response from the game and unpacks the car, driver, track, and config names from raw bytes.
-handshake_data, _ = udp_socket.recvfrom(1024)
-if len(handshake_data) == 408:
-    raw_car_bytes, raw_driver_bytes, raw_track_bytes, raw_config_bytes = struct.unpack(
-        '<100s100s8x100s100s', handshake_data
-    )
-    car_name = raw_car_bytes.decode('utf-16-le', errors='ignore').split('%', 1)[0].split('\x00', 1)[0]
-    driver_name = raw_driver_bytes.decode('utf-16-le', errors='ignore').split('%', 1)[0].split('\x00', 1)[0]
-    track_name = raw_track_bytes.decode('utf-16-le', errors='ignore').split('%', 1)[0].split('\x00', 1)[0]
-    track_config = raw_config_bytes.decode('utf-16-le', errors='ignore').split('%', 1)[0].split('\x00', 1)[0]
-    print(f"- Driver: {driver_name} | Car: {car_name} | Track: {track_name} ({track_config}) -")
-else:
-    print(f"- Unexpected handshake packet size: {len(handshake_data)} bytes -")
-
 
 #Listen for the handshake response from Assetto Corsa
 sub_packet = struct.pack('<iii', 0, 1, 1)
 udp_socket.sendto(sub_packet, (HOST, PORT))
 print("- Listening for data... -")
 
-
-#Formats the gear value to display neutral and reverse as N or R instead of integer values like 1 or 0. Makes the ouput more readable
-def format_gear(gear):
-    if gear == 1:
-        return "N"
-    elif gear == 0:
-        return "R"
-    elif gear >= 2:
-        return str(gear - 1)
-    
-    else:
-        return str(gear)
 
 #Tracks the website connects and disconnects
 async def ws_handler(websocket):
@@ -81,55 +50,35 @@ async def main_loop():
             #Waits to capture raw bytes from the data stream to the socket
             data = await loop.sock_recv(udp_socket, 1024)
 
-            
-   
-    #Assetto corsa only uses 328 bytes so a check is done to ensure the data is the correct size before unpacking the bytes
-    #Assetto corsa sends data in 4 bytes values so unpacking for each value is done with .unpack and in 4 byte increments. The game also required a 4 byte buffer to allow it to be unpacked correctly.     
-            if len(data) == 328:
 
-                    #Bytes from the data stream are unpacked and assigned values to the respective variables.
-                    speed = struct.unpack('<8xf', data[:12])[0]
-                    #<8xf unpacks 8 bytes (2*4 bytes) and skips the first 8 bytes of the data stream to get to the speed value which is located at byte 8-12. The f indicates that the value is a float.
-                    
-                    #RPM bytes
-                    rpm = struct.unpack('<68xf', data[:72])[0]
+            #Uses the parse_telemetry function from the parser script to unpack the raw bytes into a dictionary of telemetry data.
+            telemetry_data = parse_telemetry(data)
 
-                    #Selected gear bytes
-                    gear = struct.unpack('<76xi', data[:80])[0]
-
-                    #Throttle, brake and clutch bytes
-                    throttle, brake, clutch = struct.unpack('<56x3f', data[:68])
-
-                    #Car position bytes. As its a 3D vector, 3 values are unpacked for the x,y and z coordinates
-                    posx, posy, posz = struct.unpack('<316x3f', data[:328]) 
-
-                    #Lap time, lap count and best lap bytes
-                    lastLap, bestLap, lapCount = struct.unpack('<44x3i', data[:60])  
-
-                    #Dictionary for the data to be converted to JSON and sent to the websocket.
-                    telemetry_data = {
-                        "speed": speed,
-                        "rpm": rpm,
-                        "gear": format_gear(gear),
-                        "throttle": throttle,
-                        "brake": brake,
-                        "clutch": clutch,
-                        "posx": posx,
-                        "posy": posy,
-                        "posz": posz,
-                        "lastLap": lastLap,
-                        "bestLap": bestLap,
-                        "lapCount": lapCount
-                    }
+            #Assetto corsa only uses 328 bytes so a check is done to ensure the data is the correct size before unpacking the bytes
+            #Assetto corsa sends data in 4 bytes values so unpacking for each value is done with .unpack and in 4 byte increments. The game also required a 4 byte buffer to allow it to be unpacked correctly.     
+            #If the data is not the expected size, it returns None.
+            if telemetry_data:
+                speed = telemetry_data["speed"]
+                rpm = telemetry_data["rpm"] 
+                gear = telemetry_data["gear"]
+                throttle = telemetry_data["throttle"]
+                brake = telemetry_data["brake"]
+                clutch = telemetry_data["clutch"]
+                posx = telemetry_data["posx"]
+                posy = telemetry_data["posy"]
+                posz = telemetry_data["posz"]
+                lastLap = telemetry_data["lastLap"]
+                bestLap = telemetry_data["bestLap"]
+                lapCount = telemetry_data.get("lapCount", 0)  # Default to 0 if lapCount is not present
 
                     #If there are connected clients, the data is converted to JSON and sent to the websocket server
-                    if connected_clients:
-                        message = json.dumps(telemetry_data)
-                        for client in connected_clients:
-                            await client.send(message)
+                if connected_clients:
+                    message = json.dumps(telemetry_data)
+                    for client in connected_clients:
+                        await client.send(message)
                     
                     #Outputs the telemtry data in a readable format without constant outputs. Values are flushed to the console to ensure they are printed immediately and not buffered.
-                    print(f"\rRPM: {rpm:6.0f} | Speed: {speed:6.2f} km/h | Selected Gear: {format_gear(gear)} | Position: ({posx:.0f}, {posy:.0f}, {posz:.0f}) | Last Lap: {lastLap:.0f} | Best Lap: {bestLap:.0f} | Lap Count: {lapCount:.0f}", end="", flush=True)
+                    print(f"\rRPM: {rpm:6.0f} | Speed: {speed:6.2f} km/h | Selected Gear: {gear} | Position: ({posx:.0f}, {posy:.0f}, {posz:.0f}) | Last Lap: {lastLap:.0f} | Best Lap: {bestLap:.0f} | Lap Count: {lapCount:.0f}", end="", flush=True)
                     
                     
 
