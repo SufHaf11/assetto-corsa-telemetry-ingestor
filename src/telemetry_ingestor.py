@@ -18,10 +18,9 @@ connected_clients = set()
 udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 
-#Listen for the handshake response from Assetto Corsa
-sub_packet = struct.pack('<iii', 0, 1, 1)
-udp_socket.sendto(sub_packet, (HOST, PORT))
-print("- Listening for data... -")
+#Listen for the handshake response from Assetto Corsa and subscribers to it
+handshake_packet = struct.pack('<iii', 0, 1, 1)
+subscribe_packet = struct.pack('<iii', 1, 1, 1)
 
 
 #Tracks the website connects and disconnects
@@ -45,11 +44,25 @@ async def main_loop():
     #Loops indefinitely to receive telemetry data from Assetto Corsa and print it to the console until a interrupt
     try:
         udp_socket.setblocking(False)
+        handshake_received = False
+        udp_socket.sendto(handshake_packet, (HOST, PORT))
+        print("- Listening for data... -")
 
         while True:
-            #Waits to capture raw bytes from the data stream to the socket
-            data = await loop.sock_recv(udp_socket, 1024)
+            #Waits to capture raw bytes from the data stream to the socket with a timeout of 2 seconds. After 2 seconds it sends another handshake packet until its received.
+            try:
+                data = await asyncio.wait_for(loop.sock_recv(udp_socket, 1024), timeout=2)
+            except asyncio.TimeoutError:
+                if not handshake_received:
+                    udp_socket.sendto(handshake_packet, (HOST, PORT))
+                continue
 
+            #Checks if the handshake has been received and sends a subcribe packet to assetto corsa. If it doesn't it will continously send the handshake packet until it's received. 
+            #This is to ensure that the telemetry data is only sent after the handshake has been completed.
+            if parse_handshake(data) is not None:
+                udp_socket.sendto(subscribe_packet, (HOST, PORT))
+                handshake_received = True
+                continue
 
             #Uses the parse_telemetry function from the parser script to unpack the raw bytes into a dictionary of telemetry data.
             telemetry_data = parse_telemetry(data)

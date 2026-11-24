@@ -43,7 +43,7 @@ def parse_telemetry(data: bytes) -> dict | None:
     gear = struct.unpack("<76xi", data[:80])[0]
     throttle, brake, clutch = struct.unpack("<56x3f", data[:68])
     posx, posy, posz = struct.unpack("<316x3f", data[:328])
-    last_lap, best_lap = struct.unpack("<44x2i", data[:52])
+    last_lap, best_lap, lapCount = struct.unpack("<44x3i", data[:56])
 
     return {
         "speed": speed,
@@ -57,4 +57,5 @@ def parse_telemetry(data: bytes) -> dict | None:
         "posz": posz,
         "lastLap": last_lap,
         "bestLap": best_lap,
+        "lapCount": lapCount
     }
