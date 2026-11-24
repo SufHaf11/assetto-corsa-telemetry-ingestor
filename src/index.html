@@ -38,9 +38,19 @@
       clutch: document.getElementById("clutch"),
       posx: document.getElementById("posx"),
       posy: document.getElementById("posy"),
-      posz: document.getElementById("posz")
+      posz: document.getElementById("posz"),
+      lastLap: document.getElementById("lastLap"), 
+      bestLap: document.getElementById("bestLap")
     };
 
+// Handles the formatting for the lap time to display it in a readable format instead of milliseconds
+function formatLapTime(ms) {
+  if (!ms || ms <= 0) return "--:--.---";
+  const m = Math.floor(ms / 60000);
+  const s = String(Math.floor((ms % 60000) / 1000)).padStart(2, "0");
+  const x = String(Math.floor(ms % 1000)).padStart(3, "0");
+  return `${m}:${s}.${x}`;
+}
 
 // Connects to the websocket from the script. Checks for connection status. Parses the JSON data from the script and updates the UI 
     function connect() {
@@ -64,11 +74,13 @@
         fields.posx.textContent = data.posx.toFixed(1);
         fields.posy.textContent = data.posy.toFixed(1);
         fields.posz.textContent = data.posz.toFixed(1);
+        fields.lastLap.textContent = formatLapTime(data.lastLap);
+        fields.bestLap.textContent = formatLapTime(data.bestLap);
       });
 
       // Handles the websocket close event
       socket.addEventListener("close", () => {
-        status.textContent = "Disconnected - reconnecting";
+        status.textContent = "Disconnected - Trying to reconnect... Make sure the telemetry ingestor is running.";
         status.classList.remove("connected");
         setTimeout(connect, 2000);
       });
