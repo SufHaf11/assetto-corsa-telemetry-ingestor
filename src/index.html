@@ -18,20 +18,40 @@
       <div class="row"><span class="name">Speed: </span><span id="speed" class="value">-- km/h</span></div>
       <div class="row"><span class="name">RPM: </span><span id="rpm" class="value">--</span></div>
       <div class="row"><span class="name">Gear: </span><span id="gear" class="value">--</span></div>
-      <div class="row"><span class="name">Throttle: </span><span id="throttle" class="value">--%</span></div>
-      <div class="row"><span class="name">Brake: </span><span id="brake" class="value">--%</span></div>
-      <div class="row"><span class="name">Clutch: </span><span id="clutch" class="value">--%</span></div>
       <div class="row"><span class="name">Position X: </span><span id="posx" class="value">--</span></div>
       <div class="row"><span class="name">Position Y: </span><span id="posy" class="value">--</span></div>
       <div class="row"><span class="name">Position Z: </span><span id="posz" class="value">--</span></div>
       <div class="row"><span class="name">Last Lap: </span><span id="lastLap" class="value">--</span></div>
       <div class="row"><span class="name">Best Lap: </span><span id="bestLap" class="value">--</span></div>
       <div class="row"><span class="name">Lap Count: </span><span id="lapCount" class="value">--</span></div>
+
+      // Pedal bars for throttle, brake, and clutch with percentage values and visual representation
+      <div class="row">
+        <span class="name">Throttle: </span>
+        <span class="pedal-right">
+          <span id="throttle" class="value">--%</span>
+          <span class="bar-track"><span id="throttleBar" class="bar-fill throttle"></span></span>
+        </span>
+      </div>
+      <div class="row">
+        <span class="name">Brake: </span>
+        <span class="pedal-right">
+          <span id="brake" class="value">--%</span>
+          <span class="bar-track"><span id="brakeBar" class="bar-fill brake"></span></span>
+        </span>
+      </div>
+      <div class="row">
+        <span class="name">Clutch: </span>
+        <span class="pedal-right">
+          <span id="clutch" class="value">--%</span>
+          <span class="bar-track"><span id="clutchBar" class="bar-fill clutch"></span></span>
+        </span>
+      </div>
     </div>
   </main>
 
   <script>
-    // Initialize the status element and telemetry fields
+    // Initialize the status element and telemetry fields and parses the JSON data received from the websocket to update the UI
     const status = document.getElementById("status");
     const fields = {
       speed: document.getElementById("speed"),
@@ -61,15 +81,24 @@ function formatLapTime(ms) {
     function connect() {
       const socket = new WebSocket("ws://localhost:8765");
 
+      // Handles the websocket open event and updates the status to connected
       socket.addEventListener("open", () => {
         status.textContent = "Connected";
         status.classList.add("connected");
       });
 
+
+      // Handles the incoming messages from the websocket and updates the UI with the telemetry data
       socket.addEventListener("message", (event) => {
         const data = JSON.parse(event.data);
 
-// Updates the UI with the telemetry data received from the websocket
+        //The math for the throttle, brake, and clutch percentages ensures that the values are between 0 and 100 to avoid any unexpected behavior in the UI.
+        const throttlePct = Math.max(0, Math.min(100, data.throttle * 100));
+        const brakePct = Math.max(0, Math.min(100, data.brake * 100));
+        const clutchPct = Math.max(0, Math.min(100, (1 - data.clutch) * 100));
+
+
+        // Updates the UI with the telemetry data received from the websocket
         fields.speed.textContent = `${data.speed.toFixed(1)} km/h`;
         fields.rpm.textContent = data.rpm.toFixed(0);
         fields.gear.textContent = data.gear;
@@ -82,6 +111,15 @@ function formatLapTime(ms) {
         fields.lastLap.textContent = formatLapTime(data.lastLap);
         fields.bestLap.textContent = formatLapTime(data.bestLap);
         fields.lapCount.textContent = data.lapCount.toFixed(0);
+
+        // Updates the pedal bars with the calculated percentages for throttle, brake, and clutch
+        fields.throttle.textContent = `${throttlePct.toFixed(0)}%`;
+        fields.brake.textContent = `${brakePct.toFixed(0)}%`;
+        fields.clutch.textContent = `${clutchPct.toFixed(0)}%`;
+        
+        bars.throttle.style.width = `${throttlePct}%`;
+        bars.brake.style.width = `${brakePct}%`;
+        bars.clutch.style.width = `${clutchPct}%`;
       });
 
       // Handles the websocket close event
@@ -95,6 +133,13 @@ function formatLapTime(ms) {
         socket.close();
       });
     }
+
+    // Initializes the pedal bars for throttle, brake, and clutch
+    const bars = {
+      throttle: document.getElementById("throttleBar"),
+      brake: document.getElementById("brakeBar"),
+      clutch: document.getElementById("clutchBar")
+    };
 
     connect();
   </script>

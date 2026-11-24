@@ -56,3 +56,37 @@ h1 {
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
+
+/* Pedal bars for throttle, brake, and clutch with percentage values and visual representation */
+.pedal-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bar-track {
+  width: 64px;
+  height: 8px;
+  background: #0f1115;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  display: block;
+  height: 100%;
+  width: 0%;
+  transition: width 0.05s linear;
+}
+
+.bar-fill.throttle {
+  background: #22c55e;
+}
+
+.bar-fill.brake {
+  background: #cc0000;
+}
+
+.bar-fill.clutch {
+  background: #38bdf8;
+}
