@@ -23,6 +23,7 @@
       <div class="row"><span class="name">Position Z: </span><span id="posz" class="value">--</span></div>
       <div class="row"><span class="name">Last Lap: </span><span id="lastLap" class="value">--</span></div>
       <div class="row"><span class="name">Best Lap: </span><span id="bestLap" class="value">--</span></div>
+      <div class="row"><span class="name">Lap Count: </span><span id="lapCount" class="value">--</span></div>
     </div>
   </main>
 
@@ -40,7 +41,8 @@
       posy: document.getElementById("posy"),
       posz: document.getElementById("posz"),
       lastLap: document.getElementById("lastLap"), 
-      bestLap: document.getElementById("bestLap")
+      bestLap: document.getElementById("bestLap"),
+      lapCount: document.getElementById("lapCount")
     };
 
 // Handles the formatting for the lap time to display it in a readable format instead of milliseconds
@@ -76,6 +78,7 @@ function formatLapTime(ms) {
         fields.posz.textContent = data.posz.toFixed(1);
         fields.lastLap.textContent = formatLapTime(data.lastLap);
         fields.bestLap.textContent = formatLapTime(data.bestLap);
+        fields.lapCount.textContent = data.lapCount.toFixed(0);
       });
 
       // Handles the websocket close event

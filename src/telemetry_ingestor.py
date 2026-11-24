@@ -103,8 +103,8 @@ async def main_loop():
                     #Car position bytes. As its a 3D vector, 3 values are unpacked for the x,y and z coordinates
                     posx, posy, posz = struct.unpack('<316x3f', data[:328]) 
 
-                    #Lap time, last lap and best lap bytes
-                    lastLap, bestLap = struct.unpack('<44x2i', data[:52])  
+                    #Lap time, lap count and best lap bytes
+                    lastLap, bestLap, lapCount = struct.unpack('<44x3i', data[:60])  
 
                     #Dictionary for the data to be converted to JSON and sent to the websocket.
                     telemetry_data = {
@@ -118,7 +118,8 @@ async def main_loop():
                         "posy": posy,
                         "posz": posz,
                         "lastLap": lastLap,
-                        "bestLap": bestLap
+                        "bestLap": bestLap,
+                        "lapCount": lapCount
                     }
 
                     #If there are connected clients, the data is converted to JSON and sent to the websocket server
@@ -128,7 +129,7 @@ async def main_loop():
                             await client.send(message)
                     
                     #Outputs the telemtry data in a readable format without constant outputs. Values are flushed to the console to ensure they are printed immediately and not buffered.
-                    print(f"\rRPM: {rpm:6.0f} | Speed: {speed:6.2f} km/h | Selected Gear: {format_gear(gear)} | Position: ({posx:.0f}, {posy:.0f}, {posz:.0f}) | Last Lap: {lastLap:.0f} | Best Lap: {bestLap:.0f}", end="", flush=True)
+                    print(f"\rRPM: {rpm:6.0f} | Speed: {speed:6.2f} km/h | Selected Gear: {format_gear(gear)} | Position: ({posx:.0f}, {posy:.0f}, {posz:.0f}) | Last Lap: {lastLap:.0f} | Best Lap: {bestLap:.0f} | Lap Count: {lapCount:.0f}", end="", flush=True)
                     
                     
 
