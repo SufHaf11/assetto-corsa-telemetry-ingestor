@@ -4,6 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Live Telemetry</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tektur:wght@500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -72,7 +75,7 @@ function formatLapTime(ms) {
         fields.gear.textContent = data.gear;
         fields.throttle.textContent = `${(data.throttle * 100).toFixed(0)}%`;
         fields.brake.textContent = `${(data.brake * 100).toFixed(0)}%`;
-        fields.clutch.textContent = `${(data.clutch * 100).toFixed(0)}%`;
+        fields.clutch.textContent = `${((1 - data.clutch) * 100).toFixed(0)}%`;
         fields.posx.textContent = data.posx.toFixed(1);
         fields.posy.textContent = data.posy.toFixed(1);
         fields.posz.textContent = data.posz.toFixed(1);
