@@ -57,7 +57,7 @@ h1 {
   font-variant-numeric: tabular-nums;
 }
 
-/* Pedal bars for throttle, brake, and clutch with percentage values and visual representation */
+/*Pedal bars for throttle, brake, and clutch with percentage values and visual representation*/
 .pedal-right {
   display: flex;
   align-items: center;
