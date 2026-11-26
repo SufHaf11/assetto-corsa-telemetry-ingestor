@@ -14,16 +14,33 @@
     <h1>Live Telemetry</h1>
     <div id="status" class="status">Disconnected</div>
 
+    <!--Meta bar for displaying driver, car, and track information-->
+    <div class="meta-bar">
+      <div class="meta-item"><span class="name">Driver</span><span id="driver_name" class="value">--</span></div>
+      <div class="meta-item"><span class="name">Car</span><span id="car_model" class="value">--</span></div>
+      <div class="meta-item"><span class="name">Track</span><span id="track_name" class="value">--</span></div>
+    </div>
+
+    <!--Position bar for displaying X, Y, Z coordinates-->
+    <div class="pos-bar">
+      <div class="pos-item"><span class="name">X</span><span id="posx" class="value">--</span></div>
+      <div class="pos-item"><span class="name">Y</span><span id="posy" class="value">--</span></div>
+      <div class="pos-item"><span class="name">Z</span><span id="posz" class="value">--</span></div>
+    </div>
+
+
+
+    <!--Telemetry section for displaying speed, RPM, gear, lap times, and pedal inputs-->
     <div class="telemetry">
       <div class="row"><span class="name">Speed: </span><span id="speed" class="value">-- km/h</span></div>
       <div class="row"><span class="name">RPM: </span><span id="rpm" class="value">--</span></div>
       <div class="row"><span class="name">Gear: </span><span id="gear" class="value">--</span></div>
-      <div class="row"><span class="name">Position X: </span><span id="posx" class="value">--</span></div>
-      <div class="row"><span class="name">Position Y: </span><span id="posy" class="value">--</span></div>
-      <div class="row"><span class="name">Position Z: </span><span id="posz" class="value">--</span></div>
       <div class="row"><span class="name">Last Lap: </span><span id="lastLap" class="value">--</span></div>
       <div class="row"><span class="name">Best Lap: </span><span id="bestLap" class="value">--</span></div>
       <div class="row"><span class="name">Lap Count: </span><span id="lapCount" class="value">--</span></div>
+      
+
+
 
       <!--Pedal bars for throttle, brake, and clutch with percentage values and visual representation-->
       <div class="row">
@@ -50,6 +67,9 @@
     </div>
   </main>
 
+
+
+
   <script>
     // Initialize the status element and telemetry fields and parses the JSON data received from the websocket to update the UI
     const status = document.getElementById("status");
@@ -65,7 +85,10 @@
       posz: document.getElementById("posz"),
       lastLap: document.getElementById("lastLap"), 
       bestLap: document.getElementById("bestLap"),
-      lapCount: document.getElementById("lapCount")
+      lapCount: document.getElementById("lapCount"),
+      driver_name: document.getElementById("driver_name"),
+      car_model: document.getElementById("car_model"),
+      track_name: document.getElementById("track_name"),
     };
 
 // Handles the formatting for the lap time to display it in a readable format instead of milliseconds
@@ -111,6 +134,9 @@ function formatLapTime(ms) {
         fields.lastLap.textContent = formatLapTime(data.lastLap);
         fields.bestLap.textContent = formatLapTime(data.bestLap);
         fields.lapCount.textContent = data.lapCount.toFixed(0);
+        fields.driver_name.textContent = data.driver_name;
+        fields.car_model.textContent = data.car_model;
+        fields.track_name.textContent = data.track_name;
 
         // Updates the pedal bars with the calculated percentages for throttle, brake, and clutch
         fields.throttle.textContent = `${throttlePct.toFixed(0)}%`;

@@ -1,28 +1,45 @@
 body {
   margin: 0;
   padding: 24px;
-  background: #0f1115; 
-  color: #f4f1ea;      
+  background: #0f1115;
+  color: #f4f1ea;
   font-family: "Tektur", sans-serif;
 }
 
 main {
-  max-width: 540px;
+  max-width: 560px;
   margin: 0 auto;
 }
 
+.dash-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 2px solid #cc0000;
+  padding-bottom: 8px;
+  margin-bottom: 14px;
+}
+
 h1 {
-  margin: 0 0 8px;
+  margin: 0 0 4px;
   color: #f4f1ea;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  border-bottom: 2px solid #cc0000; 
-  padding-bottom: 6px;
+  font-size: 1.5rem;
+}
+
+.badge {
+  background: #cc0000;
+  color: #f4f1ea;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  padding: 4px 8px;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
 }
 
 .status {
-  margin-bottom: 18px;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: #9ca3af;
 }
 
@@ -30,6 +47,102 @@ h1 {
   color: #22c55e;
 }
 
+
+
+/* Session context strip */
+.session-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.session-item {
+  background: linear-gradient(180deg, #1b1f28 0%, #14171e 100%);
+  border: 1px solid rgba(244, 241, 234, 0.12);
+  border-top: 2px solid #cc0000;
+  padding: 8px 10px;
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%);
+}
+
+.session-label {
+  display: block;
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #9ca3af;
+}
+
+.session-val {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #f4f1ea;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+
+/* Separate XYZ coordinate bar */
+.coord-bar {
+  display: flex;
+  align-items: stretch;
+  background: #14171e;
+  border: 1px solid rgba(244, 241, 234, 0.1);
+  border-radius: 4px;
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+
+.coord-title {
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #f4f1ea;
+  background: rgba(204, 0, 0, 0.18);
+  border-right: 1px solid rgba(244, 241, 234, 0.1);
+}
+
+.coord-cells {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  flex: 1;
+}
+
+.coord-cell {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  border-right: 1px solid rgba(244, 241, 234, 0.08);
+}
+
+.coord-cell:last-child {
+  border-right: none;
+}
+
+.axis {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #cc0000;
+}
+
+.coord-num {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #f4f1ea;
+  font-variant-numeric: tabular-nums;
+}
+
+
+
+/* Main telemetry grid */
 .telemetry {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -57,7 +170,7 @@ h1 {
   font-variant-numeric: tabular-nums;
 }
 
-/*Pedal bars for throttle, brake, and clutch with percentage values and visual representation*/
+/* Pedal bars */
 .pedal-right {
   display: flex;
   align-items: center;
@@ -89,4 +202,54 @@ h1 {
 
 .bar-fill.clutch {
   background: #38bdf8;
+}
+
+@media (max-width: 520px) {
+  .session-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .coord-bar {
+    flex-direction: column;
+  }
+
+  .coord-title {
+    padding: 4px 10px;
+    border-right: none;
+    border-bottom: 1px solid rgba(244, 241, 234, 0.1);
+  }
+}
+
+
+
+/* Meta and position bars for the driver, car, track, x, y, z */
+.meta-bar,
+.pos-bar {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px 16px;
+  margin-bottom: 12px;
+}
+
+/* Position bar items for driver, car, track information */
+.meta-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #171a21;
+  border-left: 3px solid #e5a93b;
+  border-radius: 4px;
+  margin-top: 6px;
+}
+
+/* Position bar items for X, Y, Z coordinates */
+.pos-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #171a21;
+  border-left: 3px solid #2b6cb0;
+  border-radius: 4px;
 }
