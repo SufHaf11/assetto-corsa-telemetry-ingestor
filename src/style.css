@@ -41,10 +41,12 @@ h1 {
 .status {
   font-size: 0.82rem;
   color: #9ca3af;
+  margin-bottom: 12px;
 }
 
 .status.connected {
   color: #22c55e;
+  margin-bottom: 12px;
 }
 
 
@@ -223,12 +225,22 @@ h1 {
 
 
 /* Meta and position bars for the driver, car, track, x, y, z */
-.meta-bar,
+
 .pos-bar {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(50px, 1fr));
+  gap: 10px 16px;
+  margin-bottom: 12px;
+}
+.meta-bar {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px 16px;
-  margin-bottom: 12px;
+  width: 800px;
+  max-width: calc(100vw - 48px);
+  margin-left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 20px;
 }
 
 /* Position bar items for driver, car, track information */

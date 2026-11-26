@@ -19,7 +19,7 @@ udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 
 #Listen for the handshake response from Assetto Corsa and subscribers to it
-handshake_packet = struct.pack('<iii', 0, 1, 1)
+handshake_packet = struct.pack('<iii', 1, 1, 0)
 subscribe_packet = struct.pack('<iii', 1, 1, 1)
 
 
@@ -45,9 +45,11 @@ async def main_loop():
     try:
         udp_socket.setblocking(False)
         handshake_received = False
+        session_metadata = {}
         udp_socket.sendto(handshake_packet, (HOST, PORT))
         print("- Listening for data... -")
 
+        
         while True:
             #Waits to capture raw bytes from the data stream to the socket with a timeout of 2 seconds. After 2 seconds it sends another handshake packet until its received.
             try:
@@ -59,7 +61,15 @@ async def main_loop():
 
             #Checks if the handshake has been received and sends a subcribe packet to assetto corsa. If it doesn't it will continously send the handshake packet until it's received. 
             #This is to ensure that the telemetry data is only sent after the handshake has been completed.
-            if parse_handshake(data) is not None:
+            handshake_data = parse_handshake(data)
+            if handshake_data is not None:
+                #If the handshake data is received, it extracts the driver name, car model, and track name from the handshake data and stores it in a session metadata dictionary.
+                session_metadata = {
+                    "driver_name": handshake_data["driver_name"],
+                    "car_model": handshake_data["car_name"],
+                    "track_name": handshake_data["track_name"],
+                }
+
                 udp_socket.sendto(subscribe_packet, (HOST, PORT))
                 handshake_received = True
                 continue
@@ -71,6 +81,7 @@ async def main_loop():
             #Assetto corsa sends data in 4 bytes values so unpacking for each value is done with .unpack and in 4 byte increments. The game also required a 4 byte buffer to allow it to be unpacked correctly.     
             #If the data is not the expected size, it returns None.
             if telemetry_data:
+                telemetry_data.update(session_metadata)
                 speed = telemetry_data["speed"]
                 rpm = telemetry_data["rpm"] 
                 gear = telemetry_data["gear"]
@@ -80,15 +91,17 @@ async def main_loop():
                 lastLap = telemetry_data["lastLap"]
                 bestLap = telemetry_data["bestLap"]
                 lapCount = telemetry_data.get("lapCount", 0)  # Default to 0 if lapCount is not present
+                driver_name = telemetry_data.get("driver_name", "--")
+                car_model = telemetry_data.get("car_model", "--")
+                track_name = telemetry_data.get("track_name", "--")
 
-                    #If there are connected clients, the data is converted to JSON and sent to the websocket server
                 if connected_clients:
                     message = json.dumps(telemetry_data)
                     for client in connected_clients:
                         await client.send(message)
-                    
-                    #Outputs the telemtry data in a readable format without constant outputs. Values are flushed to the console to ensure they are printed immediately and not buffered.
-                    print(f"\rRPM: {rpm:6.0f} | Speed: {speed:6.2f} km/h | Selected Gear: {gear} | Position: ({posx:.0f}, {posy:.0f}, {posz:.0f}) | Last Lap: {lastLap:.0f} | Best Lap: {bestLap:.0f} | Lap Count: {lapCount:.0f}", end="", flush=True)
+
+                # Show session metadata even when no dashboard is connected.
+                print(f"Driver: {driver_name} | Car: {car_model} | Track: {track_name}", end="\r", flush=True)
                     
                     
 
